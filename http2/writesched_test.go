@@ -12,17 +12,17 @@ import (
 )
 
 func makeWriteNonStreamRequest() FrameWriteRequest {
-	return FrameWriteRequest{writeSettingsAck{}, nil, nil}
+	return FrameWriteRequest{write: writeSettingsAck{}, stream: nil, done: nil}
 }
 
 func makeWriteHeadersRequest(streamID uint32) FrameWriteRequest {
 	st := &stream{id: streamID}
-	return FrameWriteRequest{&writeResHeaders{streamID: streamID, httpResCode: 200}, st, nil}
+	return FrameWriteRequest{write: &writeResHeaders{streamID: streamID, httpResCode: 200}, stream: st, done: nil}
 }
 
 func makeHandlerPanicRST(streamID uint32) FrameWriteRequest {
 	st := &stream{id: streamID}
-	return FrameWriteRequest{&handlerPanicRST{StreamID: streamID}, st, nil}
+	return FrameWriteRequest{write: &handlerPanicRST{StreamID: streamID}, stream: st, done: nil}
 }
 
 func makeWriteRSTStream(streamID uint32) FrameWriteRequest {
@@ -77,7 +77,7 @@ func TestFrameWriteRequestWithData(t *testing.T) {
 		sc: &serverConn{maxFrameSize: 16},
 	}
 	const size = 32
-	wr := FrameWriteRequest{&writeData{st.id, make([]byte, size), true}, st, make(chan error)}
+	wr := FrameWriteRequest{write: &writeData{st.id, make([]byte, size), true}, stream: st, done: make(chan error)}
 	if got, want := wr.DataSize(), size; got != want {
 		t.Errorf("DataSize: got %v, want %v", got, want)
 	}
@@ -114,7 +114,7 @@ func TestFrameWriteRequestData(t *testing.T) {
 		sc: &serverConn{maxFrameSize: 16},
 	}
 	const size = 32
-	wr := FrameWriteRequest{&writeData{st.id, make([]byte, size), true}, st, make(chan error)}
+	wr := FrameWriteRequest{write: &writeData{st.id, make([]byte, size), true}, stream: st, done: make(chan error)}
 	if got, want := wr.DataSize(), size; got != want {
 		t.Errorf("DataSize: got %v, want %v", got, want)
 	}

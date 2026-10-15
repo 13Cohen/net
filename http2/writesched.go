@@ -4,7 +4,10 @@
 
 package http2
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // WriteScheduler is the interface implemented by HTTP/2 write schedulers.
 // Methods are never called concurrently.
@@ -48,6 +51,8 @@ type OpenStreamOptions struct {
 
 // FrameWriteRequest is a request to write a frame.
 type FrameWriteRequest struct {
+	observationEnqueued time.Time
+	observationPartial  bool
 	// write is the interface value that does the writing, once the
 	// WriteScheduler has selected this frame to write. The write
 	// functions are all defined in write.go.
@@ -128,7 +133,9 @@ func (wr FrameWriteRequest) Consume(n int32) (FrameWriteRequest, FrameWriteReque
 	if len(wd.p) > int(allowed) {
 		wr.stream.flow.take(allowed)
 		consumed := FrameWriteRequest{
-			stream: wr.stream,
+			observationEnqueued: wr.observationEnqueued,
+			observationPartial:  !wr.observationEnqueued.IsZero(),
+			stream:              wr.stream,
 			write: &writeData{
 				streamID: wd.streamID,
 				p:        wd.p[:allowed],
@@ -142,7 +149,8 @@ func (wr FrameWriteRequest) Consume(n int32) (FrameWriteRequest, FrameWriteReque
 			done: nil,
 		}
 		rest := FrameWriteRequest{
-			stream: wr.stream,
+			observationEnqueued: wr.observationEnqueued,
+			stream:              wr.stream,
 			write: &writeData{
 				streamID:  wd.streamID,
 				p:         wd.p[allowed:],

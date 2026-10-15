@@ -90,6 +90,14 @@ var (
 
 // Server is an HTTP/2 server.
 type Server struct {
+	// Observe receives bounded metadata snapshots on the serve goroutine.
+	// The callback must not block or inspect application data. Nil disables it.
+	Observe        func(context.Context, ServerObservation)
+	ObserveEnabled func(context.Context) bool
+	// PingTimeoutAfterWrite starts the ACK budget after the health PING has
+	// actually flushed. Use with a nonzero WriteByteTimeout to bound a stuck writer.
+	PingTimeoutAfterWrite bool
+
 	// MaxHandlers limits the number of http.Handler ServeHTTP goroutines
 	// which may run at a time over all connections.
 	// Negative or zero no limit.
@@ -451,6 +459,7 @@ func (s *Server) serveConn(c net.Conn, opts *ServeConnOpts, newf func(*serverCon
 		initialStreamRecvWindowSize: conf.MaxUploadBufferPerStream,
 		maxFrameSize:                initialMaxFrameSize,
 		pingTimeout:                 conf.PingTimeout,
+		pingTimeoutAfterWrite:       s.PingTimeoutAfterWrite && conf.WriteByteTimeout > 0,
 		countErrorFunc:              conf.CountError,
 		serveG:                      newGoroutineLock(),
 		pushEnabled:                 true,
@@ -586,6 +595,22 @@ func (sc *serverConn) rejectConn(err ErrCode, debug string) {
 }
 
 type serverConn struct {
+	observationSequence       uint64
+	observationWriteAt        time.Time
+	observationWriteKind      string
+	observationWriteStream    uint32
+	observationLastRead       time.Time
+	observationPingQueued     time.Time
+	observationPingWritten    time.Time
+	observationPingACK        time.Time
+	observationWindowUpdates  uint64
+	observationResetsReceived uint64
+	observationFramesWritten  uint64
+	observationDataWritten    uint64
+	observationMaxQueueMS     float64
+	pingWritten               bool
+	pingTimeoutAfterWrite     bool
+
 	// Immutable:
 	srv              *Server
 	hs               *http.Server
@@ -691,6 +716,10 @@ func (sc *serverConn) curOpenStreams() uint32 {
 // *responseWriter{,State} itself, as the Handler ending nils out the
 // responseWriter's state field.
 type stream struct {
+	observationQueued  time.Time
+	observationPending int
+	observationFrames  int
+
 	// immutable:
 	sc        *serverConn
 	id        uint32
@@ -999,11 +1028,20 @@ func (sc *serverConn) serve(conf http2Config) {
 	settingsTimer := time.AfterFunc(firstSettingsTimeout, sc.onSettingsTimer)
 	defer settingsTimer.Stop()
 
+	var observationTick <-chan time.Time
+	if sc.srv.Observe != nil {
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+		observationTick = ticker.C
+		defer sc.observe("serve_exit")
+	}
 	lastFrameTime := time.Now()
 	loopNum := 0
 	for {
 		loopNum++
 		select {
+		case <-observationTick:
+			sc.observe("sample")
 		case wr := <-sc.wantWriteFrameCh:
 			if se, ok := wr.write.(StreamError); ok {
 				sc.resetStream(se)
@@ -1014,6 +1052,7 @@ func (sc *serverConn) serve(conf http2Config) {
 			sc.wroteFrame(res)
 		case res := <-sc.readFrameCh:
 			lastFrameTime = time.Now()
+			sc.observationLastRead = lastFrameTime
 			// Process any written frames before reading new frames from the client since a
 			// written frame could have triggered a new stream to be started.
 			if sc.writingFrameAsync {
@@ -1087,6 +1126,7 @@ func (sc *serverConn) serve(conf http2Config) {
 
 func (sc *serverConn) handlePingTimer(lastFrameReadTime time.Time) {
 	if sc.pingSent {
+		sc.observe("ping_timeout")
 		sc.logf("timeout waiting for PING response")
 		if f := sc.countErrorFunc; f != nil {
 			f("conn_close_lost_ping")
@@ -1105,13 +1145,19 @@ func (sc *serverConn) handlePingTimer(lastFrameReadTime time.Time) {
 	}
 
 	sc.pingSent = true
+	sc.pingWritten = false
+	sc.observationPingQueued = time.Now()
+	sc.observationPingWritten = time.Time{}
 	// Ignore crypto/rand.Read errors: It generally can't fail, and worse case if it does
 	// is we send a PING frame containing 0s.
 	_, _ = rand.Read(sc.sentPingData[:])
 	sc.writeFrame(FrameWriteRequest{
-		write: &writePing{data: sc.sentPingData},
+		write: &writePing{data: sc.sentPingData, flush: sc.pingTimeoutAfterWrite},
 	})
-	sc.readIdleTimer.Reset(sc.pingTimeout)
+	if !sc.pingTimeoutAfterWrite {
+		sc.readIdleTimer.Reset(sc.pingTimeout)
+	}
+	sc.observe("ping_queued")
 }
 
 type serverMessage int
@@ -1230,6 +1276,9 @@ func (sc *serverConn) writeDataFromHandler(stream *stream, data []byte, endStrea
 // goroutine, call writeFrame instead.
 func (sc *serverConn) writeFrameFromHandler(wr FrameWriteRequest) error {
 	sc.serveG.checkNotOn() // NOT
+	if sc.srv.Observe != nil {
+		wr.observationEnqueued = time.Now()
+	}
 	select {
 	case sc.wantWriteFrameCh <- wr:
 		return nil
@@ -1304,6 +1353,19 @@ func (sc *serverConn) writeFrame(wr FrameWriteRequest) {
 				sc.conn.Close()
 			}
 		}
+		if sc.srv.Observe != nil {
+			if wr.observationEnqueued.IsZero() {
+				wr.observationEnqueued = time.Now()
+			}
+			if wr.stream != nil {
+				st := wr.stream
+				if st.observationFrames == 0 {
+					st.observationQueued = wr.observationEnqueued
+				}
+				st.observationFrames++
+				st.observationPending += wr.DataSize()
+			}
+		}
 		sc.writeSched.Push(wr)
 	}
 	sc.scheduleFrameWrite()
@@ -1343,6 +1405,26 @@ func (sc *serverConn) startFrameWrite(wr FrameWriteRequest) {
 		}
 	}
 
+	if sc.srv.Observe != nil {
+		sc.observationWriteAt = time.Now()
+		sc.observationWriteKind = observationFrameKind(wr)
+		sc.observationWriteStream = wr.StreamID()
+		if !wr.observationEnqueued.IsZero() {
+			ms := float64(time.Since(wr.observationEnqueued)) / float64(time.Millisecond)
+			if ms > sc.observationMaxQueueMS {
+				sc.observationMaxQueueMS = ms
+			}
+		}
+		if st != nil && !wr.observationEnqueued.IsZero() {
+			st.observationPending -= wr.DataSize()
+			if !wr.observationPartial {
+				st.observationFrames--
+			}
+			if st.observationFrames == 0 {
+				st.observationQueued = time.Time{}
+			}
+		}
+	}
 	sc.writingFrame = true
 	sc.needsFrameFlush = true
 	if wr.write.staysWithinBuffer(sc.bw.Available()) {
@@ -1378,10 +1460,26 @@ func (sc *serverConn) wroteFrame(res frameWriteResult) {
 	sc.writingFrameAsync = false
 
 	if res.err != nil {
+		sc.observe("frame_write_error")
 		sc.conn.Close()
 	}
 
 	wr := res.wr
+	if sc.srv.Observe != nil {
+		if res.err == nil {
+			sc.observationFramesWritten++
+			sc.observationDataWritten += uint64(wr.DataSize())
+		}
+		sc.observationWriteAt = time.Time{}
+	}
+	if ping, ok := wr.write.(*writePing); ok && res.err == nil && sc.pingSent && ping.data == sc.sentPingData {
+		sc.pingWritten = true
+		sc.observationPingWritten = time.Now()
+		if sc.pingTimeoutAfterWrite {
+			sc.readIdleTimer.Reset(sc.pingTimeout)
+		}
+		sc.observe("ping_written")
+	}
 
 	if writeEndsStream(wr.write) {
 		st := wr.stream
@@ -1660,6 +1758,8 @@ func (sc *serverConn) processPing(f *PingFrame) error {
 		if sc.pingSent && sc.sentPingData == f.Data {
 			// This is a response to a PING we sent.
 			sc.pingSent = false
+			sc.observationPingACK = time.Now()
+			sc.observe("ping_ack")
 			sc.readIdleTimer.Reset(sc.readIdleTimeout)
 		}
 		// 6.7 PING: " An endpoint MUST NOT respond to PING frames
@@ -1680,6 +1780,7 @@ func (sc *serverConn) processPing(f *PingFrame) error {
 
 func (sc *serverConn) processWindowUpdate(f *WindowUpdateFrame) error {
 	sc.serveG.check()
+	sc.observationWindowUpdates++
 	switch {
 	case f.StreamID != 0: // stream-level flow control
 		state, st := sc.state(f.StreamID)
@@ -1712,6 +1813,7 @@ func (sc *serverConn) processWindowUpdate(f *WindowUpdateFrame) error {
 
 func (sc *serverConn) processResetStream(f *RSTStreamFrame) error {
 	sc.serveG.check()
+	sc.observationResetsReceived++
 
 	state, st := sc.state(f.StreamID)
 	if state == stateIdle {
@@ -2266,6 +2368,9 @@ func (sc *serverConn) newStream(id, pusherID uint32, state streamState, priority
 	}
 
 	ctx, cancelCtx := context.WithCancel(sc.baseCtx)
+	if sc.srv.Observe != nil {
+		ctx = context.WithValue(ctx, observationStreamKey{}, id)
+	}
 	st := &stream{
 		sc:        sc,
 		id:        id,

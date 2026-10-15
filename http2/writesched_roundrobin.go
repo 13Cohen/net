@@ -10,6 +10,8 @@ import (
 )
 
 type roundRobinWriteScheduler struct {
+	preferHeaders bool
+	headerBurst   int
 	// control contains control frames (SETTINGS, PING, etc.).
 	control writeQueue
 
@@ -33,6 +35,15 @@ func newRoundRobinWriteScheduler() WriteScheduler {
 	ws := &roundRobinWriteScheduler{
 		streams: make(map[uint32]*writeQueue),
 	}
+	return ws
+}
+
+// NewProxyWriteScheduler prioritizes at most eight non-DATA stream heads
+// before one normal round-robin turn. Stream order and DATA flow control stay
+// unchanged, and control frames retain their existing priority.
+func NewProxyWriteScheduler() WriteScheduler {
+	ws := newRoundRobinWriteScheduler().(*roundRobinWriteScheduler)
+	ws.preferHeaders = true
 	return ws
 }
 
@@ -104,6 +115,24 @@ func (ws *roundRobinWriteScheduler) Pop() (FrameWriteRequest, bool) {
 	if ws.head == nil {
 		return FrameWriteRequest{}, false
 	}
+	if ws.preferHeaders && ws.headerBurst < 8 {
+		q := ws.head
+		for {
+			if !q.empty() && q.peek().DataSize() == 0 {
+				wr, ok := q.consume(math.MaxInt32)
+				if ok {
+					ws.head = q.next
+					ws.headerBurst++
+					return wr, true
+				}
+			}
+			q = q.next
+			if q == ws.head {
+				break
+			}
+		}
+	}
+	ws.headerBurst = 0
 	q := ws.head
 	for {
 		if wr, ok := q.consume(math.MaxInt32); ok {

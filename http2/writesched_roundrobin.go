@@ -10,6 +10,7 @@ import (
 )
 
 type roundRobinWriteScheduler struct {
+	dataQuantum   int32
 	preferHeaders bool
 	headerBurst   int
 	// control contains control frames (SETTINGS, PING, etc.).
@@ -44,6 +45,16 @@ func newRoundRobinWriteScheduler() WriteScheduler {
 func NewProxyWriteScheduler() WriteScheduler {
 	ws := newRoundRobinWriteScheduler().(*roundRobinWriteScheduler)
 	ws.preferHeaders = true
+	return ws
+}
+
+// NewBoundedDataWriteScheduler is an experimental round-robin scheduler which
+// limits each DATA turn to 16 KiB even when the peer accepts larger frames.
+// It changes neither control priority nor stream order or flow-control credit.
+// This cannot remove head-of-line blocking already inside the shared TCP socket.
+func NewBoundedDataWriteScheduler() WriteScheduler {
+	ws := newRoundRobinWriteScheduler().(*roundRobinWriteScheduler)
+	ws.dataQuantum = 16384
 	return ws
 }
 
@@ -133,9 +144,13 @@ func (ws *roundRobinWriteScheduler) Pop() (FrameWriteRequest, bool) {
 		}
 	}
 	ws.headerBurst = 0
+	quantum := int32(math.MaxInt32)
+	if ws.dataQuantum > 0 {
+		quantum = ws.dataQuantum
+	}
 	q := ws.head
 	for {
-		if wr, ok := q.consume(math.MaxInt32); ok {
+		if wr, ok := q.consume(quantum); ok {
 			ws.head = q.next
 			return wr, true
 		}

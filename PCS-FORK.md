@@ -44,3 +44,20 @@ Validation: full HTTP2/HPACK suite; synthetic-time baseline/fixed PING backpress
 unanswered PING and writer timeout; exact zero-stream-window observation/privacy;
 non-DATA priority and DATA fairness; race checks. Integrating Caddy performs the
 logging asynchronously using its existing connection budget and immutable snapshot.
+
+
+## Follow-up: bounded DATA quantum (not deployed)
+
+The first live observer trial saw nonzero H2 credit but a shared socket write
+blocked for 3.544s, with 7–9 other pending streams. The client advertised a
+16777215-byte max frame size. A separate opt-in NewBoundedDataWriteScheduler
+limits each DATA round-robin turn to 16KiB without header priority. The default
+and pcsproxy4 release are unchanged.
+
+With 33 queued 64KiB bulk writes and a large peer frame limit, DATA bytes before
+new headers are 2162688 baseline vs 540672 bounded (-75%). Flow exhaustion and
+final DATA/endStream/done delivery tests pass; HTTP2/HPACK suite and new race ×3
+pass. These are queue/semantic results, NOT a measured end-to-end speed gain.
+Next gate: Shadowrocket-like peer frame limits, delayed/lossy shaped local origin,
+full payload validation, small latency/bulk throughput/CPU comparison. TCP
+retransmission head-of-line blocking remains.

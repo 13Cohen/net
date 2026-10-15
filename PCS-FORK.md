@@ -44,3 +44,13 @@ Validation: full HTTP2/HPACK suite; synthetic-time baseline/fixed PING backpress
 unanswered PING and writer timeout; exact zero-stream-window observation/privacy;
 non-DATA priority and DATA fairness; race checks. Integrating Caddy performs the
 logging asynchronously using its existing connection budget and immutable snapshot.
+
+
+## Observation correction: EOF is not peer frame activity
+
+The server read channel also carries EOF/read failures. Updating the observation
+clock for those results made serve_exit report a near-zero last-frame age even
+after an idle timeout. Only successfully decoded frames now refresh that clock;
+connection management and PING timers are unchanged. A synthetic-time regression
+waits three seconds then closes the peer, proving the exit snapshot retains the
+three-second frame age. The old implementation fails with age zero.

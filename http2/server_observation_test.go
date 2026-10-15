@@ -104,3 +104,25 @@ func TestProxyObservationFlowAndPrivacy(t *testing.T) {
 		_ = readFrame[*DataFrame](t, st)
 	})
 }
+
+func TestProxyObservationEOFPreservesLastFrameAge(t *testing.T) {
+	synctestTest(t, func(t testing.TB) {
+		var snapshots []ServerObservation
+		st := newServerTester(t, nil, func(s *Server) {
+			s.Observe = func(_ context.Context, o ServerObservation) { snapshots = append(snapshots, o) }
+		})
+		st.greet()
+		st.advance(3 * time.Second)
+		st.cc.Close()
+		synctest.Wait()
+		for _, o := range snapshots {
+			if o.Event == "serve_exit" {
+				if o.LastFrameReadAgeMS < 3000 {
+					t.Fatalf("EOF refreshed the last successfully read frame: age=%v ms", o.LastFrameReadAgeMS)
+				}
+				return
+			}
+		}
+		t.Fatal("missing serve_exit observation")
+	})
+}

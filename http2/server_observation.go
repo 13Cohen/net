@@ -18,6 +18,10 @@ func ObservationStreamID(ctx context.Context) uint32 {
 
 // ServerObservation contains no headers, addresses, payload or PING opaque data.
 // It is an immutable value copied by the optional observer on the serve goroutine.
+// LastFrameReadAgeMS measures time since the serve loop consumed a successfully
+// decoded frame, even if protocol processing subsequently rejects that frame.
+// It is -1 before the first completed frame; failed reads do not refresh it.
+// This is not kernel receive time: reader handoff may precede serve processing.
 type ServerObservation struct {
 	Event                   string              `json:"event"`
 	Sequence                uint64              `json:"sequence"`

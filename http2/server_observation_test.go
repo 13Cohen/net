@@ -5,6 +5,7 @@ package http2
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"testing"
@@ -119,6 +120,95 @@ func TestProxyObservationEOFPreservesLastFrameAge(t *testing.T) {
 			if o.Event == "serve_exit" {
 				if o.LastFrameReadAgeMS < 3000 {
 					t.Fatalf("EOF refreshed the last successfully read frame: age=%v ms", o.LastFrameReadAgeMS)
+				}
+				return
+			}
+		}
+		t.Fatal("missing serve_exit observation")
+	})
+}
+
+func TestProxyObservationFailedFramePreservesLastFrameAge(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		partial []byte
+	}{
+		{name: "truncated_header", partial: []byte{0, 0, 8}},
+		{name: "truncated_ping_payload", partial: []byte{0, 0, 8, byte(FramePing), 0, 0, 0, 0, 0, 1}},
+		{name: "read_failure"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			synctestTest(t, func(t testing.TB) {
+				var snapshots []ServerObservation
+				st := newServerTester(t, nil, func(s *Server) {
+					s.Observe = func(_ context.Context, o ServerObservation) { snapshots = append(snapshots, o) }
+				})
+				st.greet()
+				st.advance(3 * time.Second)
+				if test.partial != nil {
+					if _, err := st.cc.Write(test.partial); err != nil {
+						t.Fatal(err)
+					}
+					st.cc.Close()
+				} else {
+					st.cc.(*synctestNetConn).rem.setReadError(errors.New("synthetic read failure"))
+				}
+				synctest.Wait()
+				for _, o := range snapshots {
+					if o.Event == "serve_exit" {
+						if o.LastFrameReadAgeMS < 3000 {
+							t.Fatalf("failed frame refreshed last successful frame: age=%v ms", o.LastFrameReadAgeMS)
+						}
+						return
+					}
+				}
+				t.Fatal("missing serve_exit observation")
+			})
+		})
+	}
+}
+
+func TestProxyObservationSuccessfulFrameAdvancesLastFrameAge(t *testing.T) {
+	synctestTest(t, func(t testing.TB) {
+		var snapshots []ServerObservation
+		st := newServerTester(t, nil, func(s *Server) {
+			s.Observe = func(_ context.Context, o ServerObservation) { snapshots = append(snapshots, o) }
+		})
+		st.greet()
+		st.advance(3 * time.Second)
+		st.writePing(false, [8]byte{1})
+		if f := readFrame[*PingFrame](t, st); !f.IsAck() {
+			t.Fatal("server did not process the successfully decoded PING")
+		}
+		st.advance(2 * time.Second)
+		st.cc.Close()
+		synctest.Wait()
+		for _, o := range snapshots {
+			if o.Event == "serve_exit" {
+				if o.LastFrameReadAgeMS < 2000 || o.LastFrameReadAgeMS >= 2001 {
+					t.Fatalf("last decoded PING age=%v ms; want 2000, not greeting/EOF age", o.LastFrameReadAgeMS)
+				}
+				return
+			}
+		}
+		t.Fatal("missing serve_exit observation")
+	})
+}
+
+func TestProxyObservationNoCompletedFrameAgeUnknown(t *testing.T) {
+	synctestTest(t, func(t testing.TB) {
+		var snapshots []ServerObservation
+		st := newServerTester(t, nil, func(s *Server) {
+			s.Observe = func(_ context.Context, o ServerObservation) { snapshots = append(snapshots, o) }
+		})
+		st.writePreface()
+		st.sync()
+		st.cc.Close()
+		synctest.Wait()
+		for _, o := range snapshots {
+			if o.Event == "serve_exit" {
+				if o.LastFrameReadAgeMS != -1 {
+					t.Fatalf("no completed frame age=%v ms; want unknown (-1)", o.LastFrameReadAgeMS)
 				}
 				return
 			}

@@ -1071,7 +1071,11 @@ func (sc *serverConn) serve(conf http2Config) {
 			sc.wroteFrame(res)
 		case res := <-sc.readFrameCh:
 			lastFrameTime = time.Now()
-			sc.observationLastRead = lastFrameTime
+			// EOF/read errors are not received frames. In particular, recording
+			// them here would make serve_exit look like fresh peer activity.
+			if res.err == nil && res.f != nil {
+				sc.observationLastRead = lastFrameTime
+			}
 			// Process any written frames before reading new frames from the client since a
 			// written frame could have triggered a new stream to be started.
 			if sc.writingFrameAsync {

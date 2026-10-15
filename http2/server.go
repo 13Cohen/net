@@ -94,6 +94,10 @@ type Server struct {
 	// The callback must not block or inspect application data. Nil disables it.
 	Observe        func(context.Context, ServerObservation)
 	ObserveEnabled func(context.Context) bool
+	// ObserveReadState receives one concurrent-safe reader-state handle before
+	// the frame reader starts. It must not block or emit unauthenticated data.
+	// Nil disables reader tracking; Snapshot does not depend on the serve loop.
+	ObserveReadState func(context.Context, *ServerReadState)
 	// PingTimeoutAfterWrite starts the ACK budget after the health PING has
 	// actually flushed. Use with a nonzero WriteByteTimeout to bound a stuck writer.
 	PingTimeoutAfterWrite bool
@@ -595,6 +599,7 @@ func (sc *serverConn) rejectConn(err ErrCode, debug string) {
 }
 
 type serverConn struct {
+	observationReader         *ServerReadState // immutable after reader startup
 	observationSequence       uint64
 	observationWriteAt        time.Time
 	observationWriteKind      string
@@ -895,15 +900,22 @@ type readFrameResult struct {
 // consumer is done with the frame.
 // It's run on its own goroutine.
 func (sc *serverConn) readFrames() {
+	defer sc.observationReader.setPhase(readPhaseStopped)
 	gate := make(chan struct{})
 	gateDone := func() { gate <- struct{}{} }
 	for {
+		sc.observationReader.setPhase(readPhaseReading)
 		f, err := sc.framer.ReadFrame()
+		if sc.observationReader != nil && err == nil && f != nil {
+			sc.observationReader.frames.Add(1)
+		}
+		sc.observationReader.setPhase(readPhaseHandoff)
 		select {
 		case sc.readFrameCh <- readFrameResult{f, err, gateDone}:
 		case <-sc.doneServing:
 			return
 		}
+		sc.observationReader.setPhase(readPhaseAwaitServe)
 		select {
 		case <-gate:
 		case <-sc.doneServing:
@@ -1023,6 +1035,10 @@ func (sc *serverConn) serve(conf http2Config) {
 		defer sc.readIdleTimer.Stop()
 	}
 
+	if sc.srv.ObserveReadState != nil {
+		sc.observationReader = &ServerReadState{origin: time.Now()}
+		sc.srv.ObserveReadState(sc.baseCtx, sc.observationReader)
+	}
 	go sc.readFrames() // closed by defer sc.conn.Close above
 
 	settingsTimer := time.AfterFunc(firstSettingsTimeout, sc.onSettingsTimer)

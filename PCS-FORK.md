@@ -61,3 +61,13 @@ pass. These are queue/semantic results, NOT a measured end-to-end speed gain.
 Next gate: Shadowrocket-like peer frame limits, delayed/lossy shaped local origin,
 full payload validation, small latency/bulk throughput/CPU comparison. TCP
 retransmission head-of-line blocking remains.
+
+
+## Observation correction: EOF is not peer frame activity
+
+The server read channel also carries EOF/read failures. Updating the observation
+clock for those results made serve_exit report a near-zero last-frame age even
+after an idle timeout. Only successfully decoded frames now refresh that clock;
+connection management and PING timers are unchanged. A synthetic-time regression
+waits three seconds then closes the peer, proving the exit snapshot retains the
+three-second frame age. The old implementation fails with age zero.

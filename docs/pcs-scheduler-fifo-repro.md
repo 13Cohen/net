@@ -1,7 +1,9 @@
 # Same-stream feedback backlog: isolated scheduler reproduction
 
 This branch adds tests only, based on production net `8f16458b`. It does not
-change the production scheduler or authorize enabling the experimental scheduler.
+change the production scheduler. The existing proxy scheduler candidate is
+**HOLD**: the multiple-feedback-stream counterexample below exposes a fairness
+limitation. Its favorable backlog result does not authorize enabling it.
 
 A production incident had a 1552-byte response DATA request pending during a
 413.619-second Flush. Timestamp-ordered snapshots show the same stream's logical
@@ -40,10 +42,30 @@ Seven test groups / twenty subtests passed, including the two existing scheduler
 tests. Checks cover FIFO/content, final completion channel, partial consumption,
 independent connection/stream credit, zero-credit HEADERS and empty DATA, sustained
 stream WINDOW_UPDATE, close during queued/partial work, and recycled queues.
-With continuous stream WINDOW_UPDATE, the existing proxy preference allows DATA
-after at most eight such selections. **Continuous global control remains an
+With one continuously refilled WINDOW_UPDATE stream and one DATA stream, the
+existing proxy preference allows DATA after at most eight such selections. This
+two-stream result is not a general fairness guarantee. **Continuous global control remains an
 unbounded priority boundary in every mode**: the test deliberately records 512
 control selections without DATA. It does not claim that boundary is fixed.
+
+### Multiple feedback streams invalidate the general fairness claim
+
+The priority burst and ordinary round-robin turn share the same advancing `head`.
+With nine continuously refilled stream WINDOW_UPDATE queues followed by one
+DATA queue, eight preferred selections move the cursor to the ninth feedback
+queue. The ordinary turn consumes that ninth WINDOW_UPDATE. The next preferred
+scan skips DATA and starts the same cycle again. A finite burst limit alone
+therefore does not prevent DATA starvation.
+
+`TestSchedulerFIFODiagnosticManyStreamWUBoundary` isolates this case for 1000 Pops.
+The unmodified production scheduler selected DATA 100 times; the existing proxy
+scheduler selected DATA **zero times**. Both 16 KiB models showed the same
+respective selection counts. The diagnostic test passes by reproducing the
+defect; the candidate fails the fairness requirement and remains HOLD.
+A later minimal fix can preserve the ordinary RR cursor across
+preferred selections, with the same fixture changed to require DATA progress;
+global control priority remains a separate limit. No implementation fix is in
+this branch.
 
 ## Reproduce
 
@@ -61,7 +83,9 @@ cold dependency compilation; package test runtime was 0.204 seconds. Cgroup CPU
 and memory include compilation and are not scheduler overhead measurements.
 Raw result fields and all passing test names are in
 [`pcs-scheduler-fifo-results.json`](pcs-scheduler-fifo-results.json).
-Only a copyright comment was added after the successful run.
+Only a copyright comment was added after that successful run; the additional
+multiple-feedback-stream case was then tested separately and its own run metadata
+is recorded in the results JSON.
 
 ## Evidence and release gates still needed
 
@@ -70,7 +94,8 @@ head age, queued counts by frame kind (distinguishing empty DATA), and cumulativ
 selection counts by kind. Reuse existing periodic bounded samples; avoid per-frame
 logs and full-queue scans. Keep stream FIFO and global control metrics separate.
 
-Before enabling a scheduler, run a separate interleaved baseline/candidate network
+Before enabling a scheduler, fix and regress the multiple-feedback-stream
+starvation case, then run a separate interleaved baseline/candidate network
 comparison with bidirectional traffic, many concurrent streams, bulk plus small
 responses, realistic RTT/bandwidth and loss, global controls, zero-window recovery,
 reset/cancel and shutdown. Validate complete payloads and TLS/authentication,

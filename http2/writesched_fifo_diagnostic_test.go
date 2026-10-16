@@ -268,6 +268,53 @@ func TestSchedulerFIFODiagnosticSustainedStreamWU(t *testing.T) {
 	}
 }
 
+// A burst bound is not a proof of DATA fairness: nine always-ready WU queues
+// can synchronize with the eight preferred selections plus one ordinary turn.
+// This records a candidate limitation rather than asserting it is corrected.
+func TestSchedulerFIFODiagnosticManyStreamWUBoundary(t *testing.T) {
+	for _, mode := range fifoDiagnosticModes {
+		t.Run(mode, func(t *testing.T) {
+			ws, _ := fifoDiagnosticScheduler(mode)
+			sc := &serverConn{maxFrameSize: 16777215}
+			sc.flow.add(1 << 30)
+			for i := uint32(0); i < 10; i++ {
+				st := &stream{id: i*2 + 1, sc: sc}
+				st.flow.add(1 << 30)
+				st.flow.setConnFlow(&sc.flow)
+				ws.OpenStream(st.id, OpenStreamOptions{})
+				if i < 9 {
+					ws.Push(fifoDiagnosticWU(st))
+				} else {
+					ws.Push(fifoDiagnosticData(st, 65536))
+				}
+			}
+			dataPops := 0
+			for i := 0; i < 1000; i++ {
+				wr, ok := ws.Pop()
+				if !ok {
+					t.Fatal("unexpected empty queue")
+				}
+				if wr.DataSize() == 0 {
+					ws.Push(fifoDiagnosticWU(wr.stream))
+				} else {
+					dataPops++
+					if !wr.observationPartial {
+						ws.Push(fifoDiagnosticData(wr.stream, 65536))
+					}
+				}
+			}
+			want := 100
+			if mode == "existing_proxy" || mode == "proxy_quantum16k_model" {
+				want = 0
+			}
+			if dataPops != want {
+				t.Fatalf("boundary changed: DATA pops=%d want=%d", dataPops, want)
+			}
+			t.Logf("MANY_STREAM_WU_BOUNDARY mode=%s replenished_WU_streams=9 total_pops=1000 DATA_pops=%d", mode, dataPops)
+		})
+	}
+}
+
 func TestSchedulerFIFODiagnosticGlobalControlBoundary(t *testing.T) {
 	for _, mode := range fifoDiagnosticModes {
 		t.Run(mode, func(t *testing.T) {

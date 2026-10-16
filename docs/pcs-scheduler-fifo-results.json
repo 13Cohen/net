@@ -1,5 +1,5 @@
 {
-  "status": "PASS for isolated scheduler mechanism and listed boundaries; no production release approval",
+  "status": "Diagnostic tests reproduce backlog and candidate starvation; existing NewProxyWriteScheduler is HOLD, not approved for production.",
   "production_net_commit": "8f16458b2f0f7c90a5db45e61e726443eebbbbec",
   "isolated_branch": "pcs/scheduler-fifo-repro",
   "utc_start": "2026-10-16T15:09:42.574944303Z",
@@ -181,10 +181,64 @@
     "Global-control priority remains unbounded; continuous global control can starve DATA in all4 modes.",
     "Actual incident does not identify each zero-payload frame type;168WINDOW_UPDATE is a mechanistic fixture, not proven packet history.",
     "Lower competing bytes before target DATA do not establish public-internet latency, throughput, CPU or user experience gain.",
-    "No race test was needed for these scheduler calls, whose contract is serial; full integration lifecycle/race remains a later gate."
+    "No race test was needed for these scheduler calls, whose contract is serial; full integration lifecycle/race remains a later gate.",
+    "One-WU-stream fairness does not generalize:9 continuously replenished stream-WU queues starve DATA in existing_proxy because priority and ordinary turns share an advancing cursor. A separate future fix and integration validation are required."
   ],
   "source_after_comment_only_copyright_header_sha256": "8b6a1a8d52ac8296b2cdc324a566e15baf683d658b88fd41ae7cf8428f31adfd",
   "source_before_comment_only_header_sha256": "a4bd444726852e18f348f2d15df2811fe420836d1fa0fc578fa1d07c3093ce57",
   "initial_attempt": "Container entrypoint argument error exited before compilation/test; preserved separately as initial-entrypoint-error.log, then corrected with explicit --entrypoint sh.",
-  "production_unchanged": true
+  "production_unchanged": true,
+  "additional_many_stream_boundary_run": {
+    "utc_start": "2026-10-16T15:16:34.109907942Z",
+    "utc_end": "2026-10-16T15:18:43.919253287Z",
+    "elapsed_seconds_including_compile": 129.809346,
+    "package_runtime_seconds": 0.101,
+    "same_resource_limits_as_initial_suite": true,
+    "cgroup_cpu_including_compile": {
+      "usage_usec": 32277864,
+      "user_usec": 26734214,
+      "system_usec": 5543650,
+      "nr_periods": 1292,
+      "nr_throttled": 1289,
+      "throttled_usec": 78455209,
+      "nr_bursts": 0,
+      "burst_usec": 0
+    },
+    "cgroup_memory_peak_bytes": 397443072,
+    "results": [
+      {
+        "mode": "production_rr",
+        "replenished_stream_WU_queues": 9,
+        "total_Pops": 1000,
+        "DATA_Pops": 100
+      },
+      {
+        "mode": "existing_proxy",
+        "replenished_stream_WU_queues": 9,
+        "total_Pops": 1000,
+        "DATA_Pops": 0
+      },
+      {
+        "mode": "rr_quantum16k_model",
+        "replenished_stream_WU_queues": 9,
+        "total_Pops": 1000,
+        "DATA_Pops": 100
+      },
+      {
+        "mode": "proxy_quantum16k_model",
+        "replenished_stream_WU_queues": 9,
+        "total_Pops": 1000,
+        "DATA_Pops": 0
+      }
+    ],
+    "passed_test_names": [
+      "TestSchedulerFIFODiagnosticManyStreamWUBoundary",
+      "TestSchedulerFIFODiagnosticManyStreamWUBoundary/production_rr",
+      "TestSchedulerFIFODiagnosticManyStreamWUBoundary/existing_proxy",
+      "TestSchedulerFIFODiagnosticManyStreamWUBoundary/rr_quantum16k_model",
+      "TestSchedulerFIFODiagnosticManyStreamWUBoundary/proxy_quantum16k_model"
+    ],
+    "interpretation": "Diagnostic reproduction succeeded, but existing_proxy fails the general DATA fairness requirement; it is HOLD. The fixed production RR does not reproduce this starvation. No implementation change or production switch."
+  },
+  "current_fixture_sha256": "2464ee6abc516bb3e72a25f1ccfd735e1097c9605a61dca8f14d58f8682d12ef"
 }

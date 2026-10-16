@@ -1,0 +1,190 @@
+{
+  "status": "PASS for isolated scheduler mechanism and listed boundaries; no production release approval",
+  "production_net_commit": "8f16458b2f0f7c90a5db45e61e726443eebbbbec",
+  "isolated_branch": "pcs/scheduler-fifo-repro",
+  "utc_start": "2026-10-16T15:09:42.574944303Z",
+  "utc_end": "2026-10-16T15:11:55.792325580Z",
+  "elapsed_seconds_including_container_start_compile_test_and_cleanup": 133.217381,
+  "go_test_package_runtime_seconds": 0.204,
+  "resource_limits": {
+    "cpu_cores": 0.25,
+    "memory_bytes": 402653184,
+    "memory_swap_bytes": 536870912,
+    "GOMAXPROCS": 1,
+    "GOMEMLIMIT": "300MiB",
+    "network": "none",
+    "wall_timeout_seconds": 180,
+    "go_test_timeout_seconds": 30
+  },
+  "cgroup_cpu_including_compile": {
+    "usage_usec": 32986040,
+    "user_usec": 26901427,
+    "system_usec": 6084613,
+    "nr_periods": 1323,
+    "nr_throttled": 1312,
+    "throttled_usec": 77087420,
+    "nr_bursts": 0,
+    "burst_usec": 0
+  },
+  "cgroup_memory_peak_bytes": 402657280,
+  "build_note": "Most of 133.217 seconds is ordinary-test dependency compilation; these CPU/memory measurements are not scheduler benchmark or production overhead. No OOM occurred; exit code 0.",
+  "fixture": {
+    "target_stream": {
+      "stream_window_updates_before_DATA": 168,
+      "DATA_bytes": 1552
+    },
+    "other_streams": 2,
+    "other_logical_DATA_bytes_each": 65536,
+    "refill": "only after prior logical DATA final chunk selected",
+    "stream_and_connection_credit_initial_bytes": 1073741824,
+    "peer_max_frame_size_bytes": 16777215,
+    "model_output": "Pop order and competing DATA bytes only; no simulated or real network timing"
+  },
+  "results": [
+    {
+      "mode": "production_rr",
+      "other_data_bytes_before": 22020096,
+      "popped_frame_kinds": {
+        "data": 337,
+        "stream_window_update": 168
+      },
+      "target_data_pop_1_based": 505,
+      "target_logical_frames_first_last": [
+        169,
+        1
+      ],
+      "target_pending_bytes_until_selected": 1552
+    },
+    {
+      "mode": "existing_proxy",
+      "other_data_bytes_before": 1441792,
+      "popped_frame_kinds": {
+        "data": 23,
+        "stream_window_update": 168
+      },
+      "target_data_pop_1_based": 191,
+      "target_logical_frames_first_last": [
+        169,
+        1
+      ],
+      "target_pending_bytes_until_selected": 1552
+    },
+    {
+      "mode": "rr_quantum16k_model",
+      "other_data_bytes_before": 5505024,
+      "popped_frame_kinds": {
+        "data": 337,
+        "stream_window_update": 168
+      },
+      "target_data_pop_1_based": 505,
+      "target_logical_frames_first_last": [
+        169,
+        1
+      ],
+      "target_pending_bytes_until_selected": 1552
+    },
+    {
+      "mode": "proxy_quantum16k_model",
+      "other_data_bytes_before": 360448,
+      "popped_frame_kinds": {
+        "data": 23,
+        "stream_window_update": 168
+      },
+      "target_data_pop_1_based": 191,
+      "target_logical_frames_first_last": [
+        169,
+        1
+      ],
+      "target_pending_bytes_until_selected": 1552
+    }
+  ],
+  "fairness": [
+    {
+      "mode": "production_rr",
+      "max_consecutive_stream_WU_before_DATA": 1,
+      "DATA_pops_in_512": 256
+    },
+    {
+      "mode": "existing_proxy",
+      "max_consecutive_stream_WU_before_DATA": 8,
+      "DATA_pops_in_512": 56
+    },
+    {
+      "mode": "rr_quantum16k_model",
+      "max_consecutive_stream_WU_before_DATA": 1,
+      "DATA_pops_in_512": 256
+    },
+    {
+      "mode": "proxy_quantum16k_model",
+      "max_consecutive_stream_WU_before_DATA": 8,
+      "DATA_pops_in_512": 56
+    }
+  ],
+  "global_control_boundary": [
+    {
+      "mode": "production_rr",
+      "finite_controls_before_DATA": 163,
+      "sustained_control_pops_without_DATA": 512,
+      "interpretation": "Unchanged global-control starvation boundary, not a fairness success."
+    },
+    {
+      "mode": "existing_proxy",
+      "finite_controls_before_DATA": 163,
+      "sustained_control_pops_without_DATA": 512,
+      "interpretation": "Unchanged global-control starvation boundary, not a fairness success."
+    },
+    {
+      "mode": "rr_quantum16k_model",
+      "finite_controls_before_DATA": 163,
+      "sustained_control_pops_without_DATA": 512,
+      "interpretation": "Unchanged global-control starvation boundary, not a fairness success."
+    },
+    {
+      "mode": "proxy_quantum16k_model",
+      "finite_controls_before_DATA": 163,
+      "sustained_control_pops_without_DATA": 512,
+      "interpretation": "Unchanged global-control starvation boundary, not a fairness success."
+    }
+  ],
+  "passed_test_names": [
+    "TestSchedulerFIFODiagnosticBacklog",
+    "TestSchedulerFIFODiagnosticBacklog/production_rr",
+    "TestSchedulerFIFODiagnosticBacklog/existing_proxy",
+    "TestSchedulerFIFODiagnosticBacklog/rr_quantum16k_model",
+    "TestSchedulerFIFODiagnosticBacklog/proxy_quantum16k_model",
+    "TestSchedulerFIFODiagnosticZeroCreditAndKinds",
+    "TestSchedulerFIFODiagnosticZeroCreditAndKinds/production_rr",
+    "TestSchedulerFIFODiagnosticZeroCreditAndKinds/existing_proxy",
+    "TestSchedulerFIFODiagnosticZeroCreditAndKinds/rr_quantum16k_model",
+    "TestSchedulerFIFODiagnosticZeroCreditAndKinds/proxy_quantum16k_model",
+    "TestSchedulerFIFODiagnosticSustainedStreamWU",
+    "TestSchedulerFIFODiagnosticSustainedStreamWU/production_rr",
+    "TestSchedulerFIFODiagnosticSustainedStreamWU/existing_proxy",
+    "TestSchedulerFIFODiagnosticSustainedStreamWU/rr_quantum16k_model",
+    "TestSchedulerFIFODiagnosticSustainedStreamWU/proxy_quantum16k_model",
+    "TestSchedulerFIFODiagnosticGlobalControlBoundary",
+    "TestSchedulerFIFODiagnosticGlobalControlBoundary/production_rr",
+    "TestSchedulerFIFODiagnosticGlobalControlBoundary/existing_proxy",
+    "TestSchedulerFIFODiagnosticGlobalControlBoundary/rr_quantum16k_model",
+    "TestSchedulerFIFODiagnosticGlobalControlBoundary/proxy_quantum16k_model",
+    "TestSchedulerFIFODiagnosticCloseLifecycle",
+    "TestSchedulerFIFODiagnosticCloseLifecycle/production_rr",
+    "TestSchedulerFIFODiagnosticCloseLifecycle/existing_proxy",
+    "TestSchedulerFIFODiagnosticCloseLifecycle/rr_quantum16k_model",
+    "TestSchedulerFIFODiagnosticCloseLifecycle/proxy_quantum16k_model",
+    "TestProxySchedulerHeadersAndFairness",
+    "TestRoundRobinScheduler"
+  ],
+  "test_assertions": "FIFO and full payload bytes preserved; final DATA done is retained and replied once; stream and connection credit enforced independently; empty DATA and HEADERS permitted at zero credit; blocked DATA does not allow later stream WU to bypass FIFO; finite global controls drain then DATA resumes; close discards queued and partial work; recycled queue remains empty; existing RR and proxy tests pass.",
+  "result_limits": [
+    "16KiB variants are test-local models of Consume quantum from9aff5f47, not that candidate implementation or full network validation.",
+    "Global-control priority remains unbounded; continuous global control can starve DATA in all4 modes.",
+    "Actual incident does not identify each zero-payload frame type;168WINDOW_UPDATE is a mechanistic fixture, not proven packet history.",
+    "Lower competing bytes before target DATA do not establish public-internet latency, throughput, CPU or user experience gain.",
+    "No race test was needed for these scheduler calls, whose contract is serial; full integration lifecycle/race remains a later gate."
+  ],
+  "source_after_comment_only_copyright_header_sha256": "8b6a1a8d52ac8296b2cdc324a566e15baf683d658b88fd41ae7cf8428f31adfd",
+  "source_before_comment_only_header_sha256": "a4bd444726852e18f348f2d15df2811fe420836d1fa0fc578fa1d07c3093ce57",
+  "initial_attempt": "Container entrypoint argument error exited before compilation/test; preserved separately as initial-entrypoint-error.log, then corrected with explicit --entrypoint sh.",
+  "production_unchanged": true
+}

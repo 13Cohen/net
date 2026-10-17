@@ -43,11 +43,34 @@ Main P95 fell from 7.511113 to 5.659346 seconds: **24.65%**, or 1.851767 seconds
 
 Independent first-wave analysis still found roughly 3.5 seconds (3.228–3.999 seconds across the retained main runs) between all four first-wave small-response Flush calls returning and the earliest client completion. During that interval, fresh H2 snapshots showed no pending request from that small-response set while TCP SendQ/notsent remained nonzero and ACKs advanced. This is a **set-level lower bound**, not an exact per-stream Flush-to-delivery join, and it does not identify physical packet loss as the cause. A smaller scheduler turn cannot eliminate already admitted TCP backlog or interrupt an active TLS write.
 
-The v2 plan is prepared only: quantum 0/16384 crossed with isolated-namespace `tcp_notsent_lowat` 65536/16384, keeping the binary and workload fixed and adding an explicit synthetic lane-to-stream join. It has **not established a benefit** and does not supersede the v1 negative acceptance result. Namespace settings also affect the experiment's client/origin sockets; this confound must remain explicit. There is no production socket-setting or source-pin change in this branch.
+## Completed v2: 56 runs, no accepted winner
+
+The separately frozen v2 2×2 screening matrix completed all 56 runs: 16 main-profile runs and eight runs for each of five controls. It crossed DATA quantum with isolated-namespace `tcp_notsent_lowat`, kept the server binary fixed, and added explicit synthetic lane-to-stream correlation. Main P95 is again the median of four per-run P95 values per cell; relative changes below are against v2 cell A, not against v1.
+
+| Cell | DATA quantum (bytes) | notsent-lowat (bytes) | Main client-completion P95 (seconds) | Change versus A |
+| --- | ---: | ---: | ---: | ---: |
+| A | 0 | 65536 | 6.0214719115 | baseline |
+| B | 16384 | 65536 | 5.7510812235 | -4.49% |
+| C | 0 | 16384 | 7.2305740535 | +20.08% |
+| D | 16384 | 16384 | 5.0137469345 | -16.74% |
+
+**No candidate reached the predeclared 30% improvement gate, so there is no accepted winner.** Fifteen of the sixteen runs across `high-multi4` and `high-single-bulk` exceeded the predeclared 10% CPU-quota-throttling limit (eight and seven runs respectively). Those high-bandwidth controls are **resource-INCONCLUSIVE**, not performance passes. The complete v2 record neither replaces nor rescues v1's failed acceptance result. Namespace lowat also affects the experiment's client/origin sockets; this remains a confound rather than an outer-socket-only intervention.
+
+## Independent offload calibration: hypothesis not supported
+
+A separate four-run ON/OFF/OFF/ON calibration held the original A cell, server binary and source fixed while changing only the isolated loopback GSO/TSO/GRO group. All four runs passed exact payload checks, effective feature read-back and quota qualification, with zero measured quota throttling. This is a fixture calibration, not a new server candidate.
+
+The predeclared primary measure was the residual `SendQ - notsent` byte count from the same TCP snapshot. Its per-arm aggregate increased from 55748 bytes ON to 72038 bytes OFF: **OFF/ON = 1.292208, or +29.22%**, and both paired comparisons increased. It therefore failed the required at-least-50% reduction. The subtraction approximates sent-but-not-yet-ACKed bytes; it does not prove that those bytes have left qdisc or reached the physical wire.
+
+Small-response P95 fell from 7.382466084 to 6.6078501365 seconds (-10.49%), but that secondary change does **not** demonstrate that aggregation caused the primary residual queue or was the main cause of delay. GSO, TSO and GRO changed together, so individual effects cannot be separated. GSO is **not an established primary cause**. The calibration preserves all original v1/v2 outcomes and does not authorize production offload or scheduler changes.
+
+Production median RTT in the compared incident evidence was approximately 159 milliseconds, while the loopback shaped model frequently observed 1–3 seconds. A configured 160-millisecond netem delay does not make the model an exact production reproduction: queueing, loopback topology and transport behavior differ. The synthetic results can test bounded mechanisms, but cannot be presented as measured production-user improvements.
+
+The sanitized acceptance evidence is collected in the separate PCS repository at `caddy/monitor/results/20261017/data-1115`. **Final status remains HOLD, with no production release, no new scheduling code and no production socket-setting or source-pin change.** Functional correctness/race passes above remain valid within their scope; they are separate from failed or inconclusive performance acceptance.
 
 ## Exact tested-source provenance
 
-The v1 binary SHA256 is `ee3b8c4c8baad0ce3658ca9187f00e0039d810a8be8898f4796f284036555781`; the client fixture binary SHA256 is `2bb68602ddd9c41a2c0c7d8377c97f3788fdc0efccb37ac83fa507a64db7d0de`. The unchanged runtime Go-file hashes below match the source manifest captured for that build. Later documentation and lifecycle-test additions do not change runtime Go code.
+The v1 binary SHA256 is `ee3b8c4c8baad0ce3658ca9187f00e0039d810a8be8898f4796f284036555781`; the client fixture binary SHA256 is `2bb68602ddd9c41a2c0c7d8377c97f3788fdc0efccb37ac83fa507a64db7d0de`. The runtime-bearing review commits remain net `fb6fa2d0c533aeb7eb7d61b40372d8b547c1ac87` and Caddy `938007e8d8adf1111da2a48421c7e10ad3df3282`. Later documentation-only commits must be recorded separately from these tested-runtime references. The unchanged runtime Go-file hashes below match the source manifest captured for that build. Later documentation and lifecycle-test additions do not change runtime Go code.
 
 | Repository / runtime file | SHA256 |
 | --- | --- |
@@ -65,4 +88,4 @@ For a warmed connection with an empty HTTP2 4096-byte buffered writer, an unpadd
 
 The exact record arithmetic does not apply unchanged to cold dynamic-record growth, pending HTTP2 buffered headers/control frames, padding, partial/error writes or handshake buffering. In particular, a nonempty H2 buffer first flushes a filled 4096-byte buffer, changing TLS call boundaries. Do not infer record counts solely from logical DATA size or one sampled 16406-byte raw write.
 
-If the fixed 16384 experiment fails CPU gates, a separate, predeclared 16375-byte DATA candidate could align an unpadded H2 frame to 16384 plaintext bytes. It is not enabled or accepted by this revision. It can save records only in applicable write-buffer/dynamic-record states and creates five H2 DATA fragments for an exact 65536-byte payload. A falsifiable follow-up should count actual below-TLS record headers/writes without payload logging on verified TLS, compare empty/pending H2 buffers and cold/warm connections, then remeasure exact client delivery and CPU per MB. The current experiment and thresholds must finish unchanged first.
+If the fixed 16384 experiment fails CPU gates, a separate, predeclared 16375-byte DATA candidate could align an unpadded H2 frame to 16384 plaintext bytes. It is not enabled or accepted by this revision. It can save records only in applicable write-buffer/dynamic-record states and creates five H2 DATA fragments for an exact 65536-byte payload. A falsifiable follow-up should count actual below-TLS record headers/writes without payload logging on verified TLS, compare empty/pending H2 buffers and cold/warm connections, then remeasure exact client delivery and CPU per MB. The completed experiments above retain their original thresholds and HOLD status; this conditional follow-up has not been implemented or accepted.

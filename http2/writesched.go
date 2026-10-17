@@ -52,6 +52,7 @@ type OpenStreamOptions struct {
 // FrameWriteRequest is a request to write a frame.
 type FrameWriteRequest struct {
 	observationEnqueued time.Time
+	observationQueuedAt time.Time
 	observationPartial  bool
 	// write is the interface value that does the writing, once the
 	// WriteScheduler has selected this frame to write. The write
@@ -134,6 +135,7 @@ func (wr FrameWriteRequest) Consume(n int32) (FrameWriteRequest, FrameWriteReque
 		wr.stream.flow.take(allowed)
 		consumed := FrameWriteRequest{
 			observationEnqueued: wr.observationEnqueued,
+			observationQueuedAt: wr.observationQueuedAt,
 			observationPartial:  !wr.observationEnqueued.IsZero(),
 			stream:              wr.stream,
 			write: &writeData{
@@ -150,6 +152,7 @@ func (wr FrameWriteRequest) Consume(n int32) (FrameWriteRequest, FrameWriteReque
 		}
 		rest := FrameWriteRequest{
 			observationEnqueued: wr.observationEnqueued,
+			observationQueuedAt: wr.observationQueuedAt,
 			stream:              wr.stream,
 			write: &writeData{
 				streamID:  wd.streamID,

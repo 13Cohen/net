@@ -613,6 +613,7 @@ type serverConn struct {
 	observationFramesWritten  uint64
 	observationDataWritten    uint64
 	observationMaxQueueMS     float64
+	observationSelections     SelectionObservation
 	pingWritten               bool
 	pingTimeoutAfterWrite     bool
 
@@ -721,9 +722,11 @@ func (sc *serverConn) curOpenStreams() uint32 {
 // *responseWriter{,State} itself, as the Handler ending nils out the
 // responseWriter's state field.
 type stream struct {
-	observationQueued  time.Time
-	observationPending int
-	observationFrames  int
+	observationQueued       time.Time
+	observationPending      int
+	observationFrames       int
+	observationSelections   SelectionObservation
+	observationLastSelected time.Time
 
 	// immutable:
 	sc        *serverConn
@@ -1370,8 +1373,9 @@ func (sc *serverConn) writeFrame(wr FrameWriteRequest) {
 			}
 		}
 		if sc.srv.Observe != nil {
+			wr.observationQueuedAt = time.Now()
 			if wr.observationEnqueued.IsZero() {
-				wr.observationEnqueued = time.Now()
+				wr.observationEnqueued = wr.observationQueuedAt
 			}
 			if wr.stream != nil {
 				st := wr.stream
@@ -1423,6 +1427,7 @@ func (sc *serverConn) startFrameWrite(wr FrameWriteRequest) {
 
 	if sc.srv.Observe != nil {
 		sc.observationWriteAt = time.Now()
+		sc.observationSelections.add(wr)
 		sc.observationWriteKind = observationFrameKind(wr)
 		sc.observationWriteStream = wr.StreamID()
 		if !wr.observationEnqueued.IsZero() {
@@ -1432,6 +1437,8 @@ func (sc *serverConn) startFrameWrite(wr FrameWriteRequest) {
 			}
 		}
 		if st != nil && !wr.observationEnqueued.IsZero() {
+			st.observationSelections.add(wr)
+			st.observationLastSelected = sc.observationWriteAt
 			st.observationPending -= wr.DataSize()
 			if !wr.observationPartial {
 				st.observationFrames--

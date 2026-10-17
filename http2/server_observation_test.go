@@ -94,6 +94,13 @@ func TestProxyObservationFlowAndPrivacy(t *testing.T) {
 		if last.FlowBlockedStreams != 1 || len(last.Examples) != 1 || last.Examples[0].SendWindow != 0 || last.Examples[0].Available != 0 {
 			t.Fatalf("not a stream flow wait: %+v", last)
 		}
+		queue := last.Examples[0].QueueDetail
+		if last.QueueEvidenceVersion != 1 || queue == nil || queue.HeadKind != "data" || queue.FirstDataAgeMS < 0 || queue.FirstDataRequestAgeMS < queue.FirstDataAgeMS || queue.FirstDataPreQueueMS < 0 || queue.Counts.Data != 1 {
+			t.Fatalf("missing actual enqueue/flow evidence: %+v", queue)
+		}
+		if last.Selections.Frames == 0 || last.Examples[0].Selections.Frames == 0 || last.Examples[0].LastSelectedAgeMS < 0 {
+			t.Fatal("synchronous header selections were not observed")
+		}
 		encoded, _ := json.Marshal(last)
 		for _, secret := range []string{"secret-payload", "127.0.0.1", "authorization"} {
 			if strings.Contains(string(encoded), secret) {

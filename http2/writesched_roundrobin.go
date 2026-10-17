@@ -10,6 +10,7 @@ import (
 )
 
 type roundRobinWriteScheduler struct {
+	dataQuantum   int32 // zero preserves the peer/flow-limited DATA turn
 	preferHeaders bool
 	headerBurst   int
 	// control contains control frames (SETTINGS, PING, etc.).
@@ -53,6 +54,21 @@ func NewProxyWriteScheduler() WriteScheduler {
 	ws := newRoundRobinWriteScheduler().(*roundRobinWriteScheduler)
 	ws.preferHeaders = true
 	return ws
+}
+
+// NewProxyWriteSchedulerWithDataQuantum constructs the same proxy scheduler
+// with an optional per-turn DATA limit. Only 0 (unchanged) and 16384 bytes are
+// accepted by this experiment. It preserves both fairness cursors, stream FIFO,
+// control priority and flow-control accounting. It changes neither the peer's
+// frame-size setting nor the server's advertised receive frame limit.
+// A quantum cannot preempt a frame already being written to the transport.
+func NewProxyWriteSchedulerWithDataQuantum(quantum int32) (WriteScheduler, error) {
+	if quantum != 0 && quantum != 16384 {
+		return nil, fmt.Errorf("http2: proxy DATA quantum must be 0 or 16384")
+	}
+	ws := NewProxyWriteScheduler().(*roundRobinWriteScheduler)
+	ws.dataQuantum = quantum
+	return ws, nil
 }
 
 func (ws *roundRobinWriteScheduler) OpenStream(streamID uint32, options OpenStreamOptions) {
@@ -146,9 +162,13 @@ func (ws *roundRobinWriteScheduler) Pop() (FrameWriteRequest, bool) {
 		}
 	}
 	ws.headerBurst = 0
+	quantum := int32(math.MaxInt32)
+	if ws.dataQuantum != 0 {
+		quantum = ws.dataQuantum
+	}
 	q := ws.head
 	for {
-		if wr, ok := q.consume(math.MaxInt32); ok {
+		if wr, ok := q.consume(quantum); ok {
 			ws.head = q.next
 			return wr, true
 		}

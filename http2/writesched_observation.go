@@ -46,7 +46,9 @@ type QueueObservation struct {
 
 // SelectionObservation counts calls to startFrameWrite, including synchronous
 // frames that can be missed by a periodic current-writer snapshot. These are
-// cumulative selections within this stream/connection, not completed delivery.
+// cumulative write starts within this stream/connection, not completed delivery.
+// Frames also includes synthetic flush and direct connection-control writes;
+// failed starts count too. It is not a scheduler Pop or wire-frame counter.
 type SelectionObservation struct {
 	Frames             uint64 `json:"frames"`
 	DataBytes          uint64 `json:"data_bytes"`

@@ -22,6 +22,11 @@ type roundRobinWriteScheduler struct {
 	// head is the next stream to write, or nil if there are no streams open.
 	head *writeQueue
 
+	// priorityHead rotates preferred selections independently of head. A
+	// preferred scan may skip DATA, so it must not advance the ordinary RR
+	// cursor: otherwise a repeating mix of zero-size heads can starve DATA.
+	priorityHead *writeQueue
+
 	// pool of empty queues for reuse.
 	queuePool writeQueuePool
 }
@@ -38,9 +43,12 @@ func newRoundRobinWriteScheduler() WriteScheduler {
 	return ws
 }
 
-// NewProxyWriteScheduler prioritizes at most eight non-DATA stream heads
-// before one normal round-robin turn. Stream order and DATA flow control stay
-// unchanged, and control frames retain their existing priority.
+// NewProxyWriteScheduler prioritizes at most eight zero-payload stream heads
+// (including empty DATA) before one normal round-robin turn. Preferred turns
+// cannot advance the ordinary round-robin cursor. With a fixed set of N streams
+// and no global control frames, an always-writable queue gets an ordinary turn
+// within at most 9*N successful selections. Stream FIFO and DATA flow control
+// stay unchanged, and global control frames retain their existing priority.
 func NewProxyWriteScheduler() WriteScheduler {
 	ws := newRoundRobinWriteScheduler().(*roundRobinWriteScheduler)
 	ws.preferHeaders = true
@@ -55,6 +63,7 @@ func (ws *roundRobinWriteScheduler) OpenStream(streamID uint32, options OpenStre
 	ws.streams[streamID] = q
 	if ws.head == nil {
 		ws.head = q
+		ws.priorityHead = q
 		q.next = q
 		q.prev = q
 	} else {
@@ -75,11 +84,15 @@ func (ws *roundRobinWriteScheduler) CloseStream(streamID uint32) {
 	if q.next == q {
 		// This was the only open stream.
 		ws.head = nil
+		ws.priorityHead = nil
 	} else {
 		q.prev.next = q.next
 		q.next.prev = q.prev
 		if ws.head == q {
 			ws.head = q.next
+		}
+		if ws.priorityHead == q {
+			ws.priorityHead = q.next
 		}
 	}
 	delete(ws.streams, streamID)
@@ -116,18 +129,18 @@ func (ws *roundRobinWriteScheduler) Pop() (FrameWriteRequest, bool) {
 		return FrameWriteRequest{}, false
 	}
 	if ws.preferHeaders && ws.headerBurst < 8 {
-		q := ws.head
+		q := ws.priorityHead
 		for {
 			if !q.empty() && q.peek().DataSize() == 0 {
 				wr, ok := q.consume(math.MaxInt32)
 				if ok {
-					ws.head = q.next
+					ws.priorityHead = q.next
 					ws.headerBurst++
 					return wr, true
 				}
 			}
 			q = q.next
-			if q == ws.head {
+			if q == ws.priorityHead {
 				break
 			}
 		}

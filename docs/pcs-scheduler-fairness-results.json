@@ -1,0 +1,1044 @@
+{
+  "status": "Unit progress and isolated scheduler cost validation PASS; integration and release acceptance pending",
+  "base_commit": "fd1fd11e076005b3f0a2949b01b1366f3a99b347",
+  "implementation": "Separate preferred and ordinary ring cursors; global control priority, FIFO and flow credit unchanged",
+  "utc_start": "2026-10-17T09:43:06.454904536Z",
+  "utc_end": "2026-10-17T09:45:15.894957020Z",
+  "elapsed_seconds_including_compile": 129.440053,
+  "unit_package_seconds": 0.305,
+  "benchmark_package_seconds": 2.996,
+  "resources": {
+    "cpus": 0.25,
+    "memory_bytes": 402653184,
+    "memory_swap_bytes": 536870912,
+    "GOMAXPROCS": 1,
+    "GOMEMLIMIT": "300MiB",
+    "network": "none",
+    "wall_timeout_seconds": 240
+  },
+  "cgroup_cpu_including_compile": {
+    "usage_usec": 32089090,
+    "user_usec": 26281722,
+    "system_usec": 5807368,
+    "nr_periods": 1284,
+    "nr_throttled": 1278,
+    "throttled_usec": 78208842,
+    "nr_bursts": 0,
+    "burst_usec": 0
+  },
+  "cgroup_memory_peak_bytes": 402657280,
+  "go_version": "go1.25.6",
+  "unit_test_groups": 12,
+  "unit_subtests": 86,
+  "passed_test_names": [
+    "TestProxySchedulerBoundedProgress",
+    "TestProxySchedulerBoundedProgress/zero0_data1_order0",
+    "TestProxySchedulerBoundedProgress/zero0_data1_order1",
+    "TestProxySchedulerBoundedProgress/zero0_data1_order2",
+    "TestProxySchedulerBoundedProgress/zero0_data1_order3",
+    "TestProxySchedulerBoundedProgress/zero1_data1_order0",
+    "TestProxySchedulerBoundedProgress/zero1_data1_order1",
+    "TestProxySchedulerBoundedProgress/zero1_data1_order2",
+    "TestProxySchedulerBoundedProgress/zero1_data1_order3",
+    "TestProxySchedulerBoundedProgress/zero8_data1_order0",
+    "TestProxySchedulerBoundedProgress/zero8_data1_order1",
+    "TestProxySchedulerBoundedProgress/zero8_data1_order2",
+    "TestProxySchedulerBoundedProgress/zero8_data1_order3",
+    "TestProxySchedulerBoundedProgress/zero9_data1_order0",
+    "TestProxySchedulerBoundedProgress/zero9_data1_order1",
+    "TestProxySchedulerBoundedProgress/zero9_data1_order2",
+    "TestProxySchedulerBoundedProgress/zero9_data1_order3",
+    "TestProxySchedulerBoundedProgress/zero10_data1_order0",
+    "TestProxySchedulerBoundedProgress/zero10_data1_order1",
+    "TestProxySchedulerBoundedProgress/zero10_data1_order2",
+    "TestProxySchedulerBoundedProgress/zero10_data1_order3",
+    "TestProxySchedulerBoundedProgress/zero17_data1_order0",
+    "TestProxySchedulerBoundedProgress/zero17_data1_order1",
+    "TestProxySchedulerBoundedProgress/zero17_data1_order2",
+    "TestProxySchedulerBoundedProgress/zero17_data1_order3",
+    "TestProxySchedulerBoundedProgress/zero18_data1_order0",
+    "TestProxySchedulerBoundedProgress/zero18_data1_order1",
+    "TestProxySchedulerBoundedProgress/zero18_data1_order2",
+    "TestProxySchedulerBoundedProgress/zero18_data1_order3",
+    "TestProxySchedulerBoundedProgress/zero31_data1_order0",
+    "TestProxySchedulerBoundedProgress/zero31_data1_order1",
+    "TestProxySchedulerBoundedProgress/zero31_data1_order2",
+    "TestProxySchedulerBoundedProgress/zero31_data1_order3",
+    "TestProxySchedulerBoundedProgress/zero64_data1_order0",
+    "TestProxySchedulerBoundedProgress/zero64_data1_order1",
+    "TestProxySchedulerBoundedProgress/zero64_data1_order2",
+    "TestProxySchedulerBoundedProgress/zero64_data1_order3",
+    "TestProxySchedulerBoundedProgress/zero1_data8_order0",
+    "TestProxySchedulerBoundedProgress/zero1_data8_order1",
+    "TestProxySchedulerBoundedProgress/zero1_data8_order2",
+    "TestProxySchedulerBoundedProgress/zero1_data8_order3",
+    "TestProxySchedulerBoundedProgress/zero9_data8_order0",
+    "TestProxySchedulerBoundedProgress/zero9_data8_order1",
+    "TestProxySchedulerBoundedProgress/zero9_data8_order2",
+    "TestProxySchedulerBoundedProgress/zero9_data8_order3",
+    "TestProxySchedulerBoundedProgress/zero18_data4_order0",
+    "TestProxySchedulerBoundedProgress/zero18_data4_order1",
+    "TestProxySchedulerBoundedProgress/zero18_data4_order2",
+    "TestProxySchedulerBoundedProgress/zero18_data4_order3",
+    "TestProxySchedulerBoundedProgress/zero64_data16_order0",
+    "TestProxySchedulerBoundedProgress/zero64_data16_order1",
+    "TestProxySchedulerBoundedProgress/zero64_data16_order2",
+    "TestProxySchedulerBoundedProgress/zero64_data16_order3",
+    "TestProxySchedulerBoundedProgress/zero256_data256_order0",
+    "TestProxySchedulerBoundedProgress/zero256_data256_order1",
+    "TestProxySchedulerBoundedProgress/zero256_data256_order2",
+    "TestProxySchedulerBoundedProgress/zero256_data256_order3",
+    "TestProxySchedulerZeroPayloadKindsProgress",
+    "TestProxySchedulerZeroPayloadKindsProgress/0",
+    "TestProxySchedulerZeroPayloadKindsProgress/2",
+    "TestProxySchedulerZeroPayloadKindsProgress/3",
+    "TestProxySchedulerCursorLifecycle",
+    "TestProxySchedulerCursorLifecycle/regular",
+    "TestProxySchedulerCursorLifecycle/priority",
+    "TestProxySchedulerCursorLifecycle/other",
+    "TestProxySchedulerPreferredTurnKeepsRegularCursor",
+    "TestSchedulerFIFODiagnosticBacklog",
+    "TestSchedulerFIFODiagnosticBacklog/production_rr",
+    "TestSchedulerFIFODiagnosticBacklog/fair_proxy",
+    "TestSchedulerFIFODiagnosticBacklog/rr_quantum16k_model",
+    "TestSchedulerFIFODiagnosticBacklog/proxy_quantum16k_model",
+    "TestSchedulerFIFODiagnosticZeroCreditAndKinds",
+    "TestSchedulerFIFODiagnosticZeroCreditAndKinds/production_rr",
+    "TestSchedulerFIFODiagnosticZeroCreditAndKinds/fair_proxy",
+    "TestSchedulerFIFODiagnosticZeroCreditAndKinds/rr_quantum16k_model",
+    "TestSchedulerFIFODiagnosticZeroCreditAndKinds/proxy_quantum16k_model",
+    "TestSchedulerFIFODiagnosticSustainedStreamWU",
+    "TestSchedulerFIFODiagnosticSustainedStreamWU/production_rr",
+    "TestSchedulerFIFODiagnosticSustainedStreamWU/fair_proxy",
+    "TestSchedulerFIFODiagnosticSustainedStreamWU/rr_quantum16k_model",
+    "TestSchedulerFIFODiagnosticSustainedStreamWU/proxy_quantum16k_model",
+    "TestSchedulerFIFODiagnosticManyStreamWUBoundary",
+    "TestSchedulerFIFODiagnosticManyStreamWUBoundary/production_rr",
+    "TestSchedulerFIFODiagnosticManyStreamWUBoundary/fair_proxy",
+    "TestSchedulerFIFODiagnosticManyStreamWUBoundary/rr_quantum16k_model",
+    "TestSchedulerFIFODiagnosticManyStreamWUBoundary/proxy_quantum16k_model",
+    "TestSchedulerFIFODiagnosticGlobalControlBoundary",
+    "TestSchedulerFIFODiagnosticGlobalControlBoundary/production_rr",
+    "TestSchedulerFIFODiagnosticGlobalControlBoundary/fair_proxy",
+    "TestSchedulerFIFODiagnosticGlobalControlBoundary/rr_quantum16k_model",
+    "TestSchedulerFIFODiagnosticGlobalControlBoundary/proxy_quantum16k_model",
+    "TestSchedulerFIFODiagnosticCloseLifecycle",
+    "TestSchedulerFIFODiagnosticCloseLifecycle/production_rr",
+    "TestSchedulerFIFODiagnosticCloseLifecycle/fair_proxy",
+    "TestSchedulerFIFODiagnosticCloseLifecycle/rr_quantum16k_model",
+    "TestSchedulerFIFODiagnosticCloseLifecycle/proxy_quantum16k_model",
+    "TestProxySchedulerHeadersAndFairness",
+    "TestRoundRobinScheduler"
+  ],
+  "regression_9WU": [
+    {
+      "mode": "production_rr",
+      "WU_streams": 9,
+      "Pops": 1000,
+      "DATA_Pops": 100
+    },
+    {
+      "mode": "fair_proxy",
+      "WU_streams": 9,
+      "Pops": 1000,
+      "DATA_Pops": 11
+    },
+    {
+      "mode": "rr_quantum16k_model",
+      "WU_streams": 9,
+      "Pops": 1000,
+      "DATA_Pops": 100
+    },
+    {
+      "mode": "proxy_quantum16k_model",
+      "WU_streams": 9,
+      "Pops": 1000,
+      "DATA_Pops": 11
+    }
+  ],
+  "backlog_results": [
+    {
+      "mode": "production_rr",
+      "other_data_bytes_before": 22020096,
+      "popped_frame_kinds": {
+        "data": 337,
+        "stream_window_update": 168
+      },
+      "target_data_pop_1_based": 505,
+      "target_logical_frames_first_last": [
+        169,
+        1
+      ],
+      "target_pending_bytes_until_selected": 1552
+    },
+    {
+      "mode": "fair_proxy",
+      "other_data_bytes_before": 917504,
+      "popped_frame_kinds": {
+        "data": 15,
+        "stream_window_update": 168
+      },
+      "target_data_pop_1_based": 183,
+      "target_logical_frames_first_last": [
+        169,
+        1
+      ],
+      "target_pending_bytes_until_selected": 1552
+    },
+    {
+      "mode": "rr_quantum16k_model",
+      "other_data_bytes_before": 5505024,
+      "popped_frame_kinds": {
+        "data": 337,
+        "stream_window_update": 168
+      },
+      "target_data_pop_1_based": 505,
+      "target_logical_frames_first_last": [
+        169,
+        1
+      ],
+      "target_pending_bytes_until_selected": 1552
+    },
+    {
+      "mode": "proxy_quantum16k_model",
+      "other_data_bytes_before": 229376,
+      "popped_frame_kinds": {
+        "data": 15,
+        "stream_window_update": 168
+      },
+      "target_data_pop_1_based": 183,
+      "target_logical_frames_first_last": [
+        169,
+        1
+      ],
+      "target_pending_bytes_until_selected": 1552
+    }
+  ],
+  "benchmark": {
+    "WU0_DATA1/rr": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 138.6,
+          "cpu-ns/op": 136.3,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 458547.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 3557.0,
+          "cpu-ns/op": 158.8,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 393701.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 168.6,
+          "cpu-ns/op": 156.4,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 399616.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 168.6,
+        "cpu-ns/op": 156.4,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 399616.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        136.3,
+        158.8
+      ]
+    },
+    "WU0_DATA1/old_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 154.1,
+          "cpu-ns/op": 153.8,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 406240.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 132.9,
+          "cpu-ns/op": 132.6,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 471342.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 135.1,
+          "cpu-ns/op": 134.9,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 463306.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 135.1,
+        "cpu-ns/op": 134.9,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 463306.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        132.6,
+        153.8
+      ]
+    },
+    "WU0_DATA1/fair_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 217.0,
+          "cpu-ns/op": 139.4,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 448511.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 3083.0,
+          "cpu-ns/op": 127.5,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 490196.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 155.5,
+          "cpu-ns/op": 155.2,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 402576.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 217.0,
+        "cpu-ns/op": 139.4,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 448511.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        127.5,
+        155.2
+      ]
+    },
+    "WU0_DATA16/rr": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 205.6,
+          "cpu-ns/op": 198.5,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 314861.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 159.1,
+          "cpu-ns/op": 158.8,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 393453.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 138.5,
+          "cpu-ns/op": 137.9,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 453063.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 159.1,
+        "cpu-ns/op": 158.8,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 393453.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        137.9,
+        198.5
+      ]
+    },
+    "WU0_DATA16/old_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 189.4,
+          "cpu-ns/op": 189.2,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 330338.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 3923.0,
+          "cpu-ns/op": 191.3,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 326627.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 277.4,
+          "cpu-ns/op": 236.7,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 264103.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 277.4,
+        "cpu-ns/op": 191.3,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 326627.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        189.2,
+        236.7
+      ]
+    },
+    "WU0_DATA16/fair_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 258.5,
+          "cpu-ns/op": 258.2,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 242014.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 267.8,
+          "cpu-ns/op": 256.3,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 243902.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 227.9,
+          "cpu-ns/op": 227.5,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 274725.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 258.5,
+        "cpu-ns/op": 256.3,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 243902.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        227.5,
+        258.2
+      ]
+    },
+    "WU0_DATA128/rr": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 248.7,
+          "cpu-ns/op": 143.9,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 434329.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 160.5,
+          "cpu-ns/op": 159.6,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 391604.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 174.9,
+          "cpu-ns/op": 156.4,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 399489.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 174.9,
+        "cpu-ns/op": 156.4,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 399489.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        143.9,
+        159.6
+      ]
+    },
+    "WU0_DATA128/old_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 4641.0,
+          "cpu-ns/op": 873.7,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 71539.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 4573.0,
+          "cpu-ns/op": 969.8,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 64443.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 1284.0,
+          "cpu-ns/op": 754.5,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 82842.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 4573.0,
+        "cpu-ns/op": 873.7,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 71539.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        754.5,
+        969.8
+      ]
+    },
+    "WU0_DATA128/fair_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 4676.0,
+          "cpu-ns/op": 739.0,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 84568.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 3993.0,
+          "cpu-ns/op": 735.2,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 85017.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 1170.0,
+          "cpu-ns/op": 681.7,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 91683.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 3993.0,
+        "cpu-ns/op": 735.2,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 85017.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        681.7,
+        739.0
+      ]
+    },
+    "WU0_DATA512/rr": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 166.2,
+          "cpu-ns/op": 164.9,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 379018.0,
+          "B/op": 1.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 156.3,
+          "cpu-ns/op": 155.9,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 400769.0,
+          "B/op": 1.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 386.4,
+          "cpu-ns/op": 173.4,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 360334.0,
+          "B/op": 1.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 166.2,
+        "cpu-ns/op": 164.9,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 379018.0,
+        "B/op": 1.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        155.9,
+        173.4
+      ]
+    },
+    "WU0_DATA512/old_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 14496.0,
+          "cpu-ns/op": 3523.0,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 17738.0,
+          "B/op": 1.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 11686.0,
+          "cpu-ns/op": 3515.0,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 17779.0,
+          "B/op": 1.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 15052.0,
+          "cpu-ns/op": 3878.0,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 16118.0,
+          "B/op": 1.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 14496.0,
+        "cpu-ns/op": 3523.0,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 17738.0,
+        "B/op": 1.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        3515.0,
+        3878.0
+      ]
+    },
+    "WU0_DATA512/fair_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 10679.0,
+          "cpu-ns/op": 3144.0,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 19880.0,
+          "B/op": 1.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 15229.0,
+          "cpu-ns/op": 3215.0,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 19441.0,
+          "B/op": 1.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 13975.0,
+          "cpu-ns/op": 3843.0,
+          "scheduled-B/op": 65536.0,
+          "scheduled-MiB/CPU-s": 16265.0,
+          "B/op": 1.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 13975.0,
+        "cpu-ns/op": 3215.0,
+        "scheduled-B/op": 65536.0,
+        "scheduled-MiB/CPU-s": 19441.0,
+        "B/op": 1.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        3144.0,
+        3843.0
+      ]
+    },
+    "WU9_DATA1/rr": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 184.0,
+          "cpu-ns/op": 181.2,
+          "scheduled-B/op": 6554.0,
+          "scheduled-MiB/CPU-s": 34492.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 193.5,
+          "cpu-ns/op": 192.8,
+          "scheduled-B/op": 6554.0,
+          "scheduled-MiB/CPU-s": 32417.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 3829.0,
+          "cpu-ns/op": 222.3,
+          "scheduled-B/op": 6554.0,
+          "scheduled-MiB/CPU-s": 28109.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 193.5,
+        "cpu-ns/op": 192.8,
+        "scheduled-B/op": 6554.0,
+        "scheduled-MiB/CPU-s": 32417.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        181.2,
+        222.3
+      ]
+    },
+    "WU9_DATA1/old_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 552.7,
+          "cpu-ns/op": 354.9,
+          "scheduled-B/op": 0.0,
+          "scheduled-MiB/CPU-s": 0.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 280.7,
+          "cpu-ns/op": 280.4,
+          "scheduled-B/op": 0.0,
+          "scheduled-MiB/CPU-s": 0.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 3857.0,
+          "cpu-ns/op": 278.6,
+          "scheduled-B/op": 0.0,
+          "scheduled-MiB/CPU-s": 0.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 552.7,
+        "cpu-ns/op": 280.4,
+        "scheduled-B/op": 0.0,
+        "scheduled-MiB/CPU-s": 0.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        278.6,
+        354.9
+      ]
+    },
+    "WU9_DATA1/fair_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 214.1,
+          "cpu-ns/op": 213.8,
+          "scheduled-B/op": 727.4,
+          "scheduled-MiB/CPU-s": 3246.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 367.4,
+          "cpu-ns/op": 220.2,
+          "scheduled-B/op": 727.4,
+          "scheduled-MiB/CPU-s": 3151.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 196.2,
+          "cpu-ns/op": 196.0,
+          "scheduled-B/op": 727.4,
+          "scheduled-MiB/CPU-s": 3540.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 214.1,
+        "cpu-ns/op": 213.8,
+        "scheduled-B/op": 727.4,
+        "scheduled-MiB/CPU-s": 3246.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        196.0,
+        220.2
+      ]
+    },
+    "WU32_DATA32/rr": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 274.2,
+          "cpu-ns/op": 250.9,
+          "scheduled-B/op": 32716.0,
+          "scheduled-MiB/CPU-s": 124352.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 3737.0,
+          "cpu-ns/op": 211.6,
+          "scheduled-B/op": 32716.0,
+          "scheduled-MiB/CPU-s": 147448.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 165.8,
+          "cpu-ns/op": 165.5,
+          "scheduled-B/op": 32716.0,
+          "scheduled-MiB/CPU-s": 188577.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 274.2,
+        "cpu-ns/op": 211.6,
+        "scheduled-B/op": 32716.0,
+        "scheduled-MiB/CPU-s": 147448.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        165.5,
+        250.9
+      ]
+    },
+    "WU32_DATA32/old_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 189.2,
+          "cpu-ns/op": 188.9,
+          "scheduled-B/op": 288.4,
+          "scheduled-MiB/CPU-s": 1456.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 303.3,
+          "cpu-ns/op": 191.2,
+          "scheduled-B/op": 288.4,
+          "scheduled-MiB/CPU-s": 1438.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 238.7,
+          "cpu-ns/op": 238.2,
+          "scheduled-B/op": 288.4,
+          "scheduled-MiB/CPU-s": 1154.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 238.7,
+        "cpu-ns/op": 191.2,
+        "scheduled-B/op": 288.4,
+        "scheduled-MiB/CPU-s": 1438.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        188.9,
+        238.2
+      ]
+    },
+    "WU32_DATA32/fair_proxy": {
+      "samples": 3,
+      "raw": [
+        {
+          "iterations": 20000,
+          "ns/op": 3851.0,
+          "cpu-ns/op": 246.0,
+          "scheduled-B/op": 3611.0,
+          "scheduled-MiB/CPU-s": 13999.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 214.8,
+          "cpu-ns/op": 180.4,
+          "scheduled-B/op": 3611.0,
+          "scheduled-MiB/CPU-s": 19095.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        },
+        {
+          "iterations": 20000,
+          "ns/op": 238.0,
+          "cpu-ns/op": 237.1,
+          "scheduled-B/op": 3611.0,
+          "scheduled-MiB/CPU-s": 14521.0,
+          "B/op": 0.0,
+          "allocs/op": 0.0
+        }
+      ],
+      "median": {
+        "iterations": 20000,
+        "ns/op": 238.0,
+        "cpu-ns/op": 237.1,
+        "scheduled-B/op": 3611.0,
+        "scheduled-MiB/CPU-s": 14521.0,
+        "B/op": 0.0,
+        "allocs/op": 0.0
+      },
+      "cpu_ns_per_op_minmax": [
+        180.4,
+        246.0
+      ]
+    }
+  },
+  "limits": [
+    "Successful selections are not wall time or delivery. Credit or blocked socket writes can still stop progress.",
+    "9*N bound assumes a fixed N-stream ring and no global control backlog; lifecycle integrity is checked separately.",
+    "Global control can still starve DATA; this original boundary is unchanged.",
+    "Old proxy references and16KiB variants are test-only controls/models, not alternate deployed binaries.",
+    "No per-Pop allocations were reported at this benchmark resolution. The implementation adds one pointer per scheduler.",
+    "Pure-DATA priority search remains O(N): at512 streams candidate median3215CPU-ns/Pop vs ordinaryRR164.9 and oldproxy3523. This is not a full proxy throughput or CPU acceptance result.",
+    "Three short repetitions disclose ranges and are not a significance claim; real network integration remains required."
+  ],
+  "source_sha256": {
+    "http2/writesched_roundrobin.go": "1b59752b56131f5a140c525e79e23ac02e292c92469116709f88477320aa46df",
+    "http2/writesched_fifo_diagnostic_test.go": "e5cf06a5761370616f8d5968b4087ba972da053be9120146ca7b3e23040c735d",
+    "http2/writesched_fairness_test.go": "36bf4b34ea38051049ff946a567fe84c7e10f99224261b05a5955ca55cd70b78",
+    "http2/writesched_fairness_bench_linux_test.go": "136e24615bab1fda88533e25412cb3167acbe4f0adf720fc8c2908f7034a5560"
+  }
+}

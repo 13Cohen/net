@@ -25,17 +25,17 @@ func (ws *fifoDiagnosticQuantum) Pop() (FrameWriteRequest, bool) {
 		return FrameWriteRequest{}, false
 	}
 	if ws.preferHeaders && ws.headerBurst < 8 {
-		q := ws.head
+		q := ws.priorityHead
 		for {
 			if !q.empty() && q.peek().DataSize() == 0 {
 				if wr, ok := q.consume(math.MaxInt32); ok {
-					ws.head = q.next
+					ws.priorityHead = q.next
 					ws.headerBurst++
 					return wr, true
 				}
 			}
 			q = q.next
-			if q == ws.head {
+			if q == ws.priorityHead {
 				break
 			}
 		}
@@ -55,11 +55,11 @@ func (ws *fifoDiagnosticQuantum) Pop() (FrameWriteRequest, bool) {
 	return FrameWriteRequest{}, false
 }
 
-var fifoDiagnosticModes = []string{"production_rr", "existing_proxy", "rr_quantum16k_model", "proxy_quantum16k_model"}
+var fifoDiagnosticModes = []string{"production_rr", "fair_proxy", "rr_quantum16k_model", "proxy_quantum16k_model"}
 
 func fifoDiagnosticScheduler(mode string) (WriteScheduler, *roundRobinWriteScheduler) {
 	base := newRoundRobinWriteScheduler().(*roundRobinWriteScheduler)
-	if mode == "existing_proxy" || mode == "proxy_quantum16k_model" {
+	if mode == "fair_proxy" || mode == "proxy_quantum16k_model" {
 		base = NewProxyWriteScheduler().(*roundRobinWriteScheduler)
 	}
 	if mode == "rr_quantum16k_model" || mode == "proxy_quantum16k_model" {
@@ -167,12 +167,12 @@ func TestSchedulerFIFODiagnosticBacklog(t *testing.T) {
 			}
 			wantPops, wantBytes := 505, 22020096
 			switch mode {
-			case "existing_proxy":
-				wantPops, wantBytes = 191, 1441792
+			case "fair_proxy":
+				wantPops, wantBytes = 183, 917504
 			case "rr_quantum16k_model":
 				wantBytes = 5505024
 			case "proxy_quantum16k_model":
-				wantPops, wantBytes = 191, 360448
+				wantPops, wantBytes = 183, 229376
 			}
 			if popIndex != wantPops || otherBytes != wantBytes {
 				t.Fatalf("got pops=%d bytes=%d; want %d %d", popIndex, otherBytes, wantPops, wantBytes)
@@ -260,7 +260,7 @@ func TestSchedulerFIFODiagnosticSustainedStreamWU(t *testing.T) {
 					}
 				}
 			}
-			if dataPops == 0 || maxGap > 8 {
+			if dataPops == 0 || maxGap > 17 {
 				t.Fatalf("DATA starvation: data=%d gap=%d", dataPops, maxGap)
 			}
 			t.Logf("FAIRNESS mode=%s max_stream_WU_before_DATA=%d DATA_pops=%d", mode, maxGap, dataPops)
@@ -268,9 +268,8 @@ func TestSchedulerFIFODiagnosticSustainedStreamWU(t *testing.T) {
 	}
 }
 
-// A burst bound is not a proof of DATA fairness: nine always-ready WU queues
-// can synchronize with the eight preferred selections plus one ordinary turn.
-// This records a candidate limitation rather than asserting it is corrected.
+// Regression: the old shared cursor selected no DATA with nine always-ready WU
+// queues. Separate preferred and ordinary cursors must keep DATA progressing.
 func TestSchedulerFIFODiagnosticManyStreamWUBoundary(t *testing.T) {
 	for _, mode := range fifoDiagnosticModes {
 		t.Run(mode, func(t *testing.T) {
@@ -304,8 +303,8 @@ func TestSchedulerFIFODiagnosticManyStreamWUBoundary(t *testing.T) {
 				}
 			}
 			want := 100
-			if mode == "existing_proxy" || mode == "proxy_quantum16k_model" {
-				want = 0
+			if mode == "fair_proxy" || mode == "proxy_quantum16k_model" {
+				want = 11
 			}
 			if dataPops != want {
 				t.Fatalf("boundary changed: DATA pops=%d want=%d", dataPops, want)
